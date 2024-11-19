@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exportar Produtos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>Exportar Produtos</h1>
+  <table id="produtos">
+    <thead>
+      <tr>
+        <th>Selecionar</th>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>Preço</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Dados serão preenchidos dinamicamente -->
+    </tbody>
+  </table>
+  <button id="exportar">Exportar Selecionados</button>
+
+  <script>
+    const produtos = [
+      { id: 1, nome: 'Batom Vermelho', preco: '10,00' },
+      { id: 2, nome: 'Rímel', preco: '25,00' },
+      { id: 3, nome: 'Pó Compacto', preco: '35,00' },
+      { id: 4, nome: 'Sombra Azul', preco: '15,00' },
+    ];
+
+    const tbody = document.querySelector('#produtos tbody');
+
+    // Preencher tabela com produtos
+    produtos.forEach(produto => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><input type="checkbox" value="${produto.id}"></td>
+        <td>${produto.id}</td>
+        <td>${produto.nome}</td>
+        <td>${produto.preco}</td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    document.querySelector('#exportar').addEventListener('click', () => {
+      const selecionados = Array.from(
+        document.querySelectorAll('#produtos input[type="checkbox"]:checked')
+      ).map(checkbox => checkbox.value);
+
+      if (selecionados.length === 0) {
+        alert('Selecione ao menos um produto para exportar.');
+        return;
+      }
+
+      fetch('http://localhost:3000/exportar-csv', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: selecionados }),
+      })
+        .then(response => response.blob())
+        .then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'produtos_selecionados.csv';
+          a.click();
+        })
+        .catch(err => console.error('Erro ao exportar CSV:', err));
+    });
+  </script>
+</body>
+</html>
